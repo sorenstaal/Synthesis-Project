@@ -16,6 +16,10 @@ matplotlib.use('Qt5Agg')
 import numpy as np
 import lum_functions as lf
 
+from astropy import units
+import astropy.cosmology.units as cunits
+from astropy.cosmology import WMAP9
+
 from PyQt5.QtWidgets import (
     QApplication,
     QComboBox,
@@ -355,7 +359,10 @@ class GasFraction(MplCanvas):
             LIRG_idx = np.loadtxt(os.path.join(data_dir, 'LIRG_indexes.txt'),
                                   dtype = int)
             
-            z_g = lf.get_redshift(data_g[:,0])
+            
+            d = data_g[:,0] * units.Mpc
+            z_g = d.to(cunits.redshift, 
+                       cunits.redshift_distance(kind = "comoving")).value
             
             dense_frac = data_g[:,1].copy()
             
@@ -531,7 +538,9 @@ class LumFraction(MplCanvas):
                                 skiprows = 1,
                                 usecols = (1, 2, 3))
             
-            z_g = lf.get_redshift(data_g[:,0])
+            d = data_g[:,0] * units.Mpc
+            z_g = d.to(cunits.redshift, 
+                       cunits.redshift_distance(kind = "comoving")).value
             
             lum_frac = data_g[:,1]
             err = data_g[:,2]
