@@ -721,6 +721,16 @@ def get_d_lum(z, H0 = 67.8):
     
     return d_lum
 
+def get_redshift(d_lum, H0 = 67.8):
+    """ Calculate  redshift from luminosity distance [Mpc]
+    Default H0 from Planck 2015"""
+    c = 299792.458  #[km/s]
+    x = 2 * c / H0
+    num = 2 * d_lum ** 2
+    denom = x * (- x + np.sqrt(x * (x + 4 * d_lum)) - 2 * d_lum)
+    z = -(num / denom + 1)
+    return z
+
 def lum_to_intensity(z, L, H0 = 67.8):
     
     d_lum = get_d_lum(z, H0)
@@ -760,4 +770,8 @@ def get_depletion_time(z, M_gas, A = 0.0158, A_err = 0.0010, B = 2.88,
 
 
 
+
+
+
+          
 

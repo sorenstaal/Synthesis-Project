@@ -209,7 +209,7 @@ class MH2Plot(MplCanvas):
 
 class GasFraction(MplCanvas):
     def make_figure(self, alpha_CO1, alpha_CO2, alpha_HCN, a_CO, b_CO,
-                    a_HCN, b_HCN, use_data = False):
+                    a_HCN, b_HCN, use_data = False, use_gaodata = False):
         
         alpha_CO1 = float(alpha_CO1)
         alpha_CO2 = float(alpha_CO2)
@@ -261,16 +261,16 @@ class GasFraction(MplCanvas):
             M_dense_d_err = L_HCN_err.copy()
             M_dense_d_err[idx] *= 10
 
-            L_cutoff = lf.LIRtoLHCN(10**11, a = 1.12, b = 0.5)
+            L_cutoff = lf.LIRtoLHCN(10**11, a = a_CO, b = b_CO)
 
 
             M_H2_d = L_CO.copy()
             M_H2_d_err = L_CO_err.copy()
-            M_H2_d[L_CO <= L_cutoff ] *= alpha_CO1
-            M_H2_d[L_CO > L_cutoff ] *= alpha_CO2
+            M_H2_d[L_CO < L_cutoff ] *= alpha_CO1
+            M_H2_d[L_CO >= L_cutoff ] *= alpha_CO2
                
-            M_H2_d_err[L_CO <= L_cutoff ] *= alpha_CO1
-            M_H2_d_err[L_CO > L_cutoff ] *= alpha_CO2
+            M_H2_d_err[L_CO < L_cutoff ] *= alpha_CO1
+            M_H2_d_err[L_CO >= L_cutoff ] *= alpha_CO2
                
             frac_d = M_dense_d / M_H2_d
             frac_d_err = np.zeros(len(frac_d))
@@ -296,16 +296,16 @@ class GasFraction(MplCanvas):
             M_dense_R_err = L_HCN_R_err.copy()
             M_dense_R_err[idx_R] *= 10
 
-            L_cutoff = lf.LIRtoLHCN(10**11, a = 1.12, b = 0.5)
-
+            L_cutoff = lf.LIRtoLHCN(10**11, a = a_CO, b = b_CO)
+            
 
             M_H2_R = L_CO_R.copy()
             M_H2_R_err = L_CO_R_err.copy()
-            M_H2_R[L_CO_R <= L_cutoff ] *= alpha_CO1
-            M_H2_R[L_CO_R > L_cutoff ] *= alpha_CO2
+            M_H2_R[L_CO_R < L_cutoff ] *= alpha_CO1
+            M_H2_R[L_CO_R >= L_cutoff ] *= alpha_CO2
 
             M_H2_R_err[L_CO_R <= L_cutoff ] *= alpha_CO1
-            M_H2_R_err[L_CO_R > L_cutoff ] *= alpha_CO2
+            M_H2_R_err[L_CO_R >= L_cutoff ] *= alpha_CO2
 
             frac_R = M_dense_R / M_H2_R
             frac_R_err = np.sqrt(((1 / M_H2_R[idx_R]) * M_dense_R_err[idx_R]) ** 2 \
@@ -344,7 +344,47 @@ class GasFraction(MplCanvas):
         
             self.axes.legend(prop = {'size': 14}, frameon = False)
             
-            # self.axes.set_ylim(0, 1)
+        
+        if use_gaodata:
+            gao_fn = 'Gao04_data.csv'
+            
+            
+            data_g = np.loadtxt(os.path.join(data_dir, gao_fn),
+                                skiprows = 1,
+                                usecols = (1, 2, 3))
+            LIRG_idx = np.loadtxt(os.path.join(data_dir, 'LIRG_indexes.txt'),
+                                  dtype = int)
+            
+            z_g = lf.get_redshift(data_g[:,0])
+            
+            dense_frac = data_g[:,1].copy()
+            
+            dense_frac[dense_frac == dense_frac[LIRG_idx]] *= alpha_HCN / alpha_CO2
+            dense_frac[dense_frac != dense_frac[LIRG_idx]] *= alpha_HCN / alpha_CO1
+            
+            err = data_g[:,2]
+            
+            idx = (err != 99) & (err != -99)
+            idx_upper = err == 99
+            idx_lower = err == -99
+            
+            
+            self.axes.plot(z_g[idx], dense_frac[idx], 'sc', markersize = 7, 
+                           label = r'IR galaxies')
+            self.axes.errorbar(z_g[idx_upper], dense_frac[idx_upper],
+                               yerr = 0.01, uplims = True,
+                               fmt = 'sc', alpha = 0.7,
+                               elinewidth = 1, markersize = 7)
+            self.axes.errorbar(z_g[idx_lower], dense_frac[idx_lower],
+                               yerr = 0.01, lolims = True,
+                               fmt = 'sc', alpha = 0.7,
+                               elinewidth = 1, markersize = 7)
+            self.axes.legend(prop = {'size': 14}, frameon = False)
+            
+        if ~use_data & use_gaodata:
+                self.axes.set_xlim(0, 0.1)
+        else:
+            self.axes.set_xlim(-0.5, 10.5)
         
         self.axes.set_xlabel(r'Redshift', fontsize = 20)
         # self.axes.set_ylabel(r"L'$_{\text{HCN(1-0)}}$/L'$_{\text{CO(1-0)}}$",
@@ -361,7 +401,8 @@ class GasFraction(MplCanvas):
         
         
 class LumFraction(MplCanvas):
-    def make_figure(self, a_CO, b_CO, a_HCN, b_HCN, use_data = False):
+    def make_figure(self, a_CO, b_CO, a_HCN, b_HCN, use_data = False,
+                    use_gaodata = False):
         
         a_CO = float(a_CO)
         b_CO = float(b_CO)
@@ -408,7 +449,6 @@ class LumFraction(MplCanvas):
             M_dense_d_err = L_HCN_err.copy()
             M_dense_d_err[idx] *= 10
 
-            L_cutoff = lf.LIRtoLHCN(10**11, a = 1.12, b = 0.5)
 
 
             M_H2_d = L_CO.copy()
@@ -454,7 +494,7 @@ class LumFraction(MplCanvas):
             self.axes.errorbar(z_R[idx_R], frac_R[idx_R], yerr = frac_R_err,
                               label = r'DSFG', fmt = 'bo', alpha = 0.7,
                               elinewidth = 1, markersize = 5)
-            self.axes.errorbar(z_R[~idx_R], frac_R[~idx_R], yerr = 0.1, uplims = True,
+            self.axes.errorbar(z_R[~idx_R], frac_R[~idx_R], yerr = 0.01, uplims = True,
                               fmt = 'bo', alpha = 0.7,
                               elinewidth = 1, markersize = 5)
 
@@ -466,7 +506,7 @@ class LumFraction(MplCanvas):
                           capsize = 0.3, label = r'QSO', fmt = 'g*', alpha = 0.7,
                           elinewidth = 1, markersize = 7)
             self.axes.errorbar(z[(~idx) & (QSO_idx)], frac_d[(~idx) & (QSO_idx)],
-                          yerr = 0.1, uplims = True,
+                          yerr = 0.01, uplims = True,
                           fmt = 'g*', alpha = 0.7,
                           elinewidth = 1, markersize = 7)
 
@@ -476,13 +516,46 @@ class LumFraction(MplCanvas):
                           elinewidth = 1, markersize = 7)
 
             self.axes.errorbar(z[(~idx) & (~QSO_idx)], frac_d[(~idx) & (~QSO_idx)],
-                          yerr = 0.1, uplims = True,
+                          yerr = 0.01, uplims = True,
                           fmt = 'r+', alpha = 0.7,
                           elinewidth = 1, markersize = 7)
         
             self.axes.legend(prop = {'size': 14}, frameon = False)
             
             self.axes.set_ylim(0, 0.6)
+        
+        if use_gaodata:
+            gao_fn = 'Gao04_data.csv'
+            
+            data_g = np.loadtxt(os.path.join(data_dir, gao_fn),
+                                skiprows = 1,
+                                usecols = (1, 2, 3))
+            
+            z_g = lf.get_redshift(data_g[:,0])
+            
+            lum_frac = data_g[:,1]
+            err = data_g[:,2]
+            
+            idx = (err != 99) & (err != -99)
+            idx_upper = err == 99
+            idx_lower = err == -99
+            
+            self.axes.plot(z_g[idx], lum_frac[idx], 'sc', markersize = 7, 
+                           label = r'IR galaxies')
+            self.axes.errorbar(z_g[idx_upper], lum_frac[idx_upper],
+                               yerr = 0.01, uplims = True,
+                               fmt = 'sc', alpha = 0.7,
+                               elinewidth = 1, markersize = 7)
+            self.axes.errorbar(z_g[idx_lower], lum_frac[idx_lower],
+                               yerr = 0.01, lolims = True,
+                               fmt = 'sc', alpha = 0.7,
+                               elinewidth = 1, markersize = 7)
+            self.axes.legend(prop = {'size': 14}, frameon = False)
+            
+        if ~use_data & use_gaodata:
+                self.axes.set_xlim(0, 0.1)
+        else:
+            self.axes.set_xlim(-0.5, 10.5)
         
         
         self.axes.set_xlabel(r'Redshift', fontsize = 20)

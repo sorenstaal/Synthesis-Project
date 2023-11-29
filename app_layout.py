@@ -230,6 +230,7 @@ class FrontWindow(QWidget):
         
         # check box for including data
         self.data3 = QCheckBox("Include gas fraction data")
+        self.gaodata3 = QCheckBox("Include data from Gao+2004b")
         
         # button for updating plot
         button3 = QPushButton("Plot current attributes", self)
@@ -249,7 +250,8 @@ class FrontWindow(QWidget):
                                                                  self.page3.alpha_HCN.text(), self.page3.a_CO.text(),
                                                                  self.page3.b_CO.text(), self.page3.a_HCN.text(),
                                                                  self.page3.b_HCN.text(),
-                                                                 self.data3.isChecked()))
+                                                                 self.data3.isChecked(),
+                                                                 self.gaodata3.isChecked()))
         # add toolbar
         self.page3.toolbar = NavigationToolbar(pl_gasfrac, self.page3)
         
@@ -277,6 +279,7 @@ class FrontWindow(QWidget):
         self.page3Layout.addLayout(self.page3HLayout)
         
         self.page3Layout.addWidget(self.data3)
+        self.page3Layout.addWidget(self.gaodata3)
         self.page3Layout.addWidget(self.page3.toolbar)
         self.page3Layout.addWidget(pl_gasfrac)
         
@@ -304,6 +307,7 @@ class FrontWindow(QWidget):
         
         # check box for including data
         self.data4 = QCheckBox("Include luminosity fraction data")
+        self.gaodata4 = QCheckBox("Include data from Gao+2004b")
         
         # plot for updating plot
         button4 = QPushButton("Plot current attributes", self)
@@ -315,7 +319,8 @@ class FrontWindow(QWidget):
         button4.clicked.connect(lambda: pl_lumfrac.make_figure(self.page4.a_CO.text(), 
                                                              self.page4.b_CO.text(),
                                self.page4.a_HCN.text(), self.page4.b_HCN.text(),
-                               self.data4.isChecked()))
+                               self.data4.isChecked(),
+                               self.gaodata4.isChecked()))
         
         self.page4.toolbar = NavigationToolbar(pl_lumfrac, self.page4)
         
@@ -333,6 +338,7 @@ class FrontWindow(QWidget):
         self.page4Layout.addLayout(self.page4HLayout)
         
         self.page4Layout.addWidget(self.data4)
+        self.page4Layout.addWidget(self.gaodata4)
         self.page4Layout.addWidget(self.page4.toolbar)
         self.page4Layout.addWidget(pl_lumfrac)
         
